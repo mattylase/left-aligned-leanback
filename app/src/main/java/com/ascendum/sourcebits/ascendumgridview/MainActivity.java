@@ -66,6 +66,9 @@ public class MainActivity extends Activity {
         if (keyCode == KeyEvent.KEYCODE_D) {
             RowViewHolder holder = (RowViewHolder) view.findViewHolderForLayoutPosition(0);
             int index = holder.rowAdapter.incrementSelection();
+            if (holder.rowAdapter.shouldInfiniteLoop(index)) {
+                holder.rowAdapter.addPage(Arrays.asList("Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"));
+            }
             ((CustomLayoutManager)holder.listRowView.getGridView().getLayoutManager())
                     .scrollToPositionWithOffset(index, 0);
         }
@@ -86,9 +89,9 @@ public class MainActivity extends Activity {
         public RowViewHolder(View itemView) {
             super(itemView);
             listRowView = itemView.findViewById(R.id.list_row_view);
-            listRowView.getGridView().setLayoutManager(new CustomLayoutManager(itemView.getContext()));
+            CustomLayoutManager customLayoutManager = new CustomLayoutManager(itemView.getContext());
+            listRowView.getGridView().setLayoutManager(customLayoutManager);
             rowAdapter = new RowAdapter(data);
-
             listRowView.getGridView().setAdapter(rowAdapter);
             listRowView.getGridView().setSelectedPosition(0);
         }
@@ -157,6 +160,15 @@ public class MainActivity extends Activity {
             return selectedIndex;
         }
 
+        public boolean shouldInfiniteLoop(int fromPosition) {
+            return fromPosition >= data.size() / 3;
+        }
+
+        public void addPage(List<String> content) {
+            data.addAll(content);
+            notifyDataSetChanged();
+        }
+
         @NonNull
         @Override
         public CardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -202,10 +214,10 @@ public class MainActivity extends Activity {
     }
 
     void prepareData() {
-        List<String> list1 = Arrays.asList("Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet");
-        List<String> list2 = Arrays.asList("Dog", "Cat", "Fish", "Bird", "Elephant");
-        List<String> list3 = Arrays.asList("Spaghetti", "Pizza", "Ham Sam", "Taco", "Ice Cream", "Hamburger", "Hotdog");
-        List<String> list4 = Arrays.asList("Bud", "Miller", "Coors", "Milbest", "CBC IPA", "Hop Stoopid", "Thirsty Dog", "Avery", "Seventh Son");
+        List<String> list1 = new ArrayList<>(Arrays.asList("Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"));
+        List<String> list2 = new ArrayList<>(Arrays.asList("Dog", "Cat", "Fish", "Bird", "Elephant"));
+        List<String> list3 = new ArrayList<>(Arrays.asList("Spaghetti", "Pizza", "Ham Sam", "Taco", "Ice Cream", "Hamburger", "Hotdog"));
+        List<String> list4 = new ArrayList<>(Arrays.asList("Bud", "Miller", "Coors", "Milbest", "CBC IPA", "Hop Stoopid", "Thirsty Dog", "Avery", "Seventh Son"));
         dataSet = Arrays.asList(list1, list2, list3, list4);
     }
 }
