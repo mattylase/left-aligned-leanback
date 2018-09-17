@@ -17,19 +17,14 @@ package com.ascendum.sourcebits.ascendumgridview;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v17.leanback.widget.ListRowHoverCardView;
 import android.support.v17.leanback.widget.ListRowView;
 import android.support.v17.leanback.widget.VerticalGridView;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,20 +59,33 @@ public class MainActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_D) {
-            RowViewHolder holder = (RowViewHolder) view.findViewHolderForLayoutPosition(0);
+            RowViewHolder holder = (RowViewHolder) view.findViewHolderForLayoutPosition(((VerticalAdapter)view.getAdapter()).getSelectedIndex());
             int index = holder.rowAdapter.incrementSelection();
             if (holder.rowAdapter.shouldInfiniteLoop(index)) {
-                holder.rowAdapter.addPage(Arrays.asList("Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"));
+                holder.rowAdapter.addDuplicatePage();
             }
             ((CustomLayoutManager)holder.listRowView.getGridView().getLayoutManager())
                     .scrollToPositionWithOffset(index, 0);
         }
         if (keyCode == KeyEvent.KEYCODE_A) {
-            RowViewHolder holder = (RowViewHolder) view.findViewHolderForLayoutPosition(0);
+            RowViewHolder holder = (RowViewHolder) view.findViewHolderForLayoutPosition((((VerticalAdapter)view.getAdapter()).getSelectedIndex()));
             int index = holder.rowAdapter.decrementSelection();
             ((CustomLayoutManager)holder.listRowView.getGridView().getLayoutManager())
                     .scrollToPositionWithOffset(index, 0);
         }
+
+        if (keyCode == KeyEvent.KEYCODE_W) {
+            VerticalAdapter adapter = (VerticalAdapter)view.getAdapter();
+            int position = adapter.decrementSelection();
+            view.getLayoutManager().scrollToPosition(position);
+        }
+
+        if (keyCode == KeyEvent.KEYCODE_S) {
+            VerticalAdapter adapter = (VerticalAdapter)view.getAdapter();
+            int position = adapter.incrementSelection();
+            view.getLayoutManager().scrollToPosition(position);
+        }
+
         return false;
     }
 
@@ -98,6 +106,7 @@ public class MainActivity extends Activity {
 
         public void bindData(List<String> data) {
             rowAdapter.data = data;
+            rowAdapter.duplicateData = data;
             rowAdapter.notifyDataSetChanged();
         }
     }
@@ -113,7 +122,9 @@ public class MainActivity extends Activity {
     }
 
     class VerticalAdapter extends RecyclerView.Adapter<RowViewHolder> {
+        int selectedRow = 0;
         List<List<String>> gridData;
+
         VerticalAdapter(List<List<String>> data) {
             this.gridData = data;
         }
@@ -134,14 +145,36 @@ public class MainActivity extends Activity {
         public int getItemCount() {
             return dataSet.size();
         }
+
+        public int getSelectedIndex() {
+            return selectedRow;
+        }
+
+        public int incrementSelection() {
+            if (selectedRow < dataSet.size()) {
+                selectedRow += 1;
+                notifyDataSetChanged();
+            }
+            return selectedRow;
+        }
+
+        public int decrementSelection() {
+            if (selectedRow > 0) {
+                selectedRow -= 1;
+                notifyDataSetChanged();
+            }
+            return selectedRow;
+        }
     }
 
     class RowAdapter extends  RecyclerView.Adapter<CardViewHolder> {
-        List<String> data;
+        private List<String> data;
+        private List<String> duplicateData;
         int selectedIndex;
+
         RowAdapter(List<String> rowData) {
             this.data = rowData;
-            selectedIndex = 0;
+            this.selectedIndex = 0;
         }
 
         public int incrementSelection() {
@@ -164,8 +197,8 @@ public class MainActivity extends Activity {
             return fromPosition >= data.size() / 3;
         }
 
-        public void addPage(List<String> content) {
-            data.addAll(content);
+        public void addDuplicatePage() {
+            data.addAll(duplicateData);
             notifyDataSetChanged();
         }
 
